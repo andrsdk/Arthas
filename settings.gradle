@@ -1,0 +1,1 @@
+include ':plugin_impl_apk', ':sample', ':proxy', ':plugin_impl', ':plugin_loader', ':plugin_pack', ':iplugin'
