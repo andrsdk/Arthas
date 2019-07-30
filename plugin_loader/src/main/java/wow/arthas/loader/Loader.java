@@ -1,4 +1,4 @@
-package com.yyyy.loader;
+package wow.arthas.loader;
 
 import android.content.Context;
 

@@ -1,5 +1,5 @@
 #include <jni.h>
-#include "android/log.h"
+#include <android/log.h>
 #include <stdio.h>
 #include <string>
 #include <android/asset_manager.h>
@@ -22,9 +22,9 @@ static const char JSTRING[] = "Ljava/lang/String;";
 static const char JCLASS_LOADER[] = "Ljava/lang/ClassLoader;";
 static const char JCLASS[] = "Ljava/lang/Class;";
 //定义类名
-static const char *className = "com/yyyy/loader/Loader";
+static const char *className = "wow/arthas/loader/Loader";
 static const char *dexFileName = "dex-debug.apk";
-static const char* pluginClassName = "wow.arthas.plugin.PluginImpl";
+static const char *pluginClassName = "wow.arthas.plugin.PluginImpl";
 
 
 // 获取缓存apk目录
@@ -54,8 +54,8 @@ static jstring stringFromJNI(JNIEnv *env, jobject) {
 }
 
 long getCurrentTime() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
+    struct timeval tv{};
+    gettimeofday(&tv, nullptr);
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
@@ -66,12 +66,9 @@ static void a(JNIEnv *env, jobject context, char *out) {
 
     jclass fileCls = env->GetObjectClass(fileObject);
     jmethodID getAbsolutePathId = env->GetMethodID(fileCls, "getAbsolutePath", "()Ljava/lang/String;");
-    jstring absolutePath = static_cast<jstring>(env->CallObjectMethod(fileObject, getAbsolutePathId));
-
+    auto absolutePath = (jstring) env->CallObjectMethod(fileObject, getAbsolutePathId);
     const char *absolutePathStr = env->GetStringUTFChars(absolutePath, nullptr);
-
     env->ReleaseStringUTFChars(absolutePath, absolutePathStr);
-
     strcpy(out, absolutePathStr);
 }
 
@@ -84,7 +81,7 @@ static void a(JNIEnv *env, jobject context, char *out) {
 static bool b(AAssetManager *mgr, const char *dexFileName, char *dstPath) {
     // 获取 asset 对象，对应的文件名    UNKNOWN 0, RANDOM 1, STREAMING 2, BUFFER 3
     AAsset *asset = AAssetManager_open(mgr, dexFileName, AASSET_MODE_STREAMING);
-    if (asset == nullptr) {
+    if (nullptr == asset) {
         LOGE("[plugin_loader] AAssetManager_open failed");
         return false;
     }
@@ -146,19 +143,19 @@ static void loadDex(JNIEnv *env, jobject, jstring dexPath, jstring optimizedDire
     LOGI("loadDex loadClass_method %p", loadClass_method);
     jstring class_name = env->NewStringUTF("freelifer.jiami.dexdemo.A");
 //    jclass entry_class = static_cast<jclass>(env->CallObjectMethod(dex_loader_obj, loadClass_method, class_name));
-    jclass entry_class = (jclass) env->CallObjectMethod(dex_loader_obj, loadClass_method, class_name);
+    auto entry_class = (jclass) env->CallObjectMethod(dex_loader_obj, loadClass_method, class_name);
 
     LOGI("loadDex entry_class %p", entry_class);
     jmethodID invoke_method = env->GetStaticMethodID(entry_class, "get", "()Ljava/lang/String;");
 
     LOGI("loadDex invoke_method %p", invoke_method);
-    jstring pring = (jstring) env->CallStaticObjectMethod(entry_class, invoke_method);
+    auto pring = (jstring) env->CallStaticObjectMethod(entry_class, invoke_method);
 
 
 //    jclass clazz = env->FindClass("com/yyyy/loader/A");
 //    jmethodID jmId = env->GetStaticMethodID(clazz, "get", "()Ljava/lang/String;");
 //    jstring pring =(jstring)env->CallStaticObjectMethod(clazz, jmId);
-    const char *printStr = env->GetStringUTFChars(pring, NULL);
+    const char *printStr = env->GetStringUTFChars(pring, nullptr);
 
 //    LOGI("loadDex end %p", obj);
     LOGI("loadDex end %s", printStr);
@@ -210,20 +207,20 @@ static jint start(JNIEnv *env, jobject, jobject context) {
     jmethodID loadClass_method = env->GetMethodID(dexClassLoaderCls, "loadClass", sig_buffer);
     LOGI("loadDex loadClass_method %p", loadClass_method);
     jstring class_name = env->NewStringUTF("freelifer.jiami.dexdemo.A");
-    jclass entry_class = (jclass) env->CallObjectMethod(dexClassLoader, loadClass_method, class_name);
+    auto entry_class = (jclass) env->CallObjectMethod(dexClassLoader, loadClass_method, class_name);
     LOGI("loadDex entry_class %p", entry_class);
 
     jmethodID invoke_method = env->GetStaticMethodID(entry_class, "get", "()Ljava/lang/String;");
     LOGI("loadDex invoke_method %p", invoke_method);
 
-    jstring pring = (jstring) env->CallStaticObjectMethod(entry_class, invoke_method);
+    auto pring = (jstring) env->CallStaticObjectMethod(entry_class, invoke_method);
 
-    const char *printStr = env->GetStringUTFChars(pring, NULL);
+    const char *printStr = env->GetStringUTFChars(pring, nullptr);
     LOGI("loadDex end %s", printStr);
     env->ReleaseStringUTFChars(pring, printStr);
 
     jstring pluginClassNameStr = env->NewStringUTF(pluginClassName);
-    jclass pluginClass = (jclass) env->CallObjectMethod(dexClassLoader, loadClass_method, pluginClassNameStr);
+    auto pluginClass = (jclass) env->CallObjectMethod(dexClassLoader, loadClass_method, pluginClassNameStr);
     if (nullptr == pluginClass) {
         LOGE("[plugin_loader] DexClassLoader loadClass failed");
         return 100;
@@ -271,7 +268,7 @@ static int registerNativeMethods(JNIEnv *env, const char *className,
     jclass clazz;
     LOGI("Registering %s natives\n", className);
     clazz = (env)->FindClass(className);
-    if (clazz == NULL) {
+    if (nullptr == clazz) {
         LOGE("Native registration unable to find class '%s'\n", className);
         return JNI_ERR;
     }
@@ -288,7 +285,7 @@ static int registerNativeMethods(JNIEnv *env, const char *className,
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     LOGI("call JNI_OnLoad");
 
-    JNIEnv *env = NULL;
+    JNIEnv *env = nullptr;
 
     if (vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK) {  //判断 JNI 版本是否为JNI_VERSION_1_4
         return JNI_EVERSION;

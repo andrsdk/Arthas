@@ -5,8 +5,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
-import android.widget.Toast
-import com.yyyy.loader.Loader
+import wow.arthas.loader.Loader
 import dalvik.system.DexClassLoader
 import freelifer.kotlin.core.HostProvider
 
@@ -34,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 //
         findViewById<Button>(R.id.callDexBtn).setOnClickListener {
 
-            Log.i("kzhu", "I'm from host ${Thread.currentThread().name}");
+            Log.i("kzhu", "I'm from host ${Thread.currentThread().name}")
             HostProvider.getInstance().handle("hahaType")
 //            try {
 //                val clazz = dexClassLoader!!.loadClass("freelifer.jiami.dexdemo.Core");
@@ -49,6 +48,6 @@ class MainActivity : AppCompatActivity() {
 
         val ret = Loader.start(applicationContext)
 
-        Log.i("kzhu", "Current exec result ${ret}");
+        Log.i("kzhu", "Current exec result ${ret}")
     }
 }
