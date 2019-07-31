@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "freelifer.jiami.host"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -22,7 +22,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
+    sourceSets {
+        debug {
+            assets.srcDir('build/generated/assets/plugin_impl_apk/debug/')
+        }
+        release {
+            assets.srcDir('build/generated/assets/plugin_impl_apk/release/')
+        }
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
 }
 
 dependencies {
@@ -36,4 +47,47 @@ dependencies {
 
     implementation project(':plugin_loader')
     implementation project(':plugin_pack')
+}
+
+def createCopyTask(projectName, buildType, name, apkName, inputFile, taskName) {
+    def outputFile = file("${getBuildDir()}/generated/assets/${name}/${buildType}/${apkName}")
+    outputFile.getParentFile().mkdirs()
+    return tasks.create("copy${buildType.capitalize()}${name.capitalize()}Task", Copy) {
+        group = 'build'
+        description = "复制${name}到assets中."
+        from(inputFile.getParent()) {
+            include(inputFile.name)
+            rename { outputFile.name }
+        }
+        into(outputFile.getParent())
+
+    }.dependsOn("${projectName}:${taskName}")
+}
+
+def generateAssets(generateAssetsTask, buildType) {
+    println("[plugin] generateAssets $buildType")
+    def moduleName = 'plugin_impl_apk'
+    def pluginImplApkFile = file(
+            "${project(":plugin_impl_apk").getBuildDir()}" +
+                    "/outputs/apk/${buildType}/" +
+                    "${moduleName}-${buildType}.apk"
+    )
+    println("[plugin] pluginImplApkFile ${pluginImplApkFile}")
+    generateAssetsTask.dependsOn createCopyTask(
+            ':plugin_impl_apk',
+            buildType,
+            moduleName,
+            'plugin.apk',
+            pluginImplApkFile,
+            "assemble${buildType.capitalize()}"
+    )
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == "generateDebugAssets") {
+        generateAssets(task, 'debug')
+    }
+    if (task.name == "generateReleaseAssets") {
+        generateAssets(task, 'release')
+    }
 }
