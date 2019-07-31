@@ -13,5 +13,5 @@ public class Loader {
 
     public static native int start(Context context);
 
-    public static native void load(String dexPath, String optimizedDirectory, ClassLoader cl);
+//    public static native void load(String dexPath, String optimizedDirectory, ClassLoader cl);
 }

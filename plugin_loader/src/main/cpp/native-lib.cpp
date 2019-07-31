@@ -23,7 +23,7 @@ static const char JCLASS_LOADER[] = "Ljava/lang/ClassLoader;";
 static const char JCLASS[] = "Ljava/lang/Class;";
 //定义类名
 static const char *className = "wow/arthas/loader/Loader";
-static const char *dexFileName = "dex-debug.apk";
+static const char *dexFileName = "plugin.apk";
 static const char *pluginClassName = "wow.arthas.plugin.PluginImpl";
 
 
@@ -204,23 +204,11 @@ static jint start(JNIEnv *env, jobject, jobject context) {
     // 调用插件中的启动类初始化
     jclass dexClassLoaderCls = env->GetObjectClass(dexClassLoader);
     snprintf(sig_buffer, 512, "(%s)%s", JSTRING, JCLASS);
-    jmethodID loadClass_method = env->GetMethodID(dexClassLoaderCls, "loadClass", sig_buffer);
-    LOGI("loadDex loadClass_method %p", loadClass_method);
-    jstring class_name = env->NewStringUTF("freelifer.jiami.dexdemo.A");
-    auto entry_class = (jclass) env->CallObjectMethod(dexClassLoader, loadClass_method, class_name);
-    LOGI("loadDex entry_class %p", entry_class);
-
-    jmethodID invoke_method = env->GetStaticMethodID(entry_class, "get", "()Ljava/lang/String;");
-    LOGI("loadDex invoke_method %p", invoke_method);
-
-    auto pring = (jstring) env->CallStaticObjectMethod(entry_class, invoke_method);
-
-    const char *printStr = env->GetStringUTFChars(pring, nullptr);
-    LOGI("loadDex end %s", printStr);
-    env->ReleaseStringUTFChars(pring, printStr);
+    jmethodID loadClassMethodID = env->GetMethodID(dexClassLoaderCls, "loadClass", sig_buffer);
+    LOGI("loadDex loadClass_method %p", loadClassMethodID);
 
     jstring pluginClassNameStr = env->NewStringUTF(pluginClassName);
-    auto pluginClass = (jclass) env->CallObjectMethod(dexClassLoader, loadClass_method, pluginClassNameStr);
+    auto pluginClass = (jclass) env->CallObjectMethod(dexClassLoader, loadClassMethodID, pluginClassNameStr);
     if (nullptr == pluginClass) {
         LOGE("[plugin_loader] DexClassLoader loadClass failed");
         return 100;
@@ -258,7 +246,7 @@ static jint start(JNIEnv *env, jobject, jobject context) {
  * 参数3：C++定义对应 Java native方法的函数名
  */
 static JNINativeMethod jni_Methods_table[] = {
-        {"load",  "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V", (void *) loadDex},
+//        {"load",  "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V", (void *) loadDex},
         {"start", "(Landroid/content/Context;)I",                                   (void *) start},
 };
 

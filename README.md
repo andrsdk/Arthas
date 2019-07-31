@@ -11,12 +11,13 @@
 | plugin_pack | library | 打包模块, 依赖loader库和plugin_impl_apk文件, 其他代码和资源 |
 | sample | application | sample模块, 依赖plugin_pack库, 测试plugin_pack和plugin_impl_apk所有功能demo项目 |
 
+## 运行流程
+
+直接运行sample的run，打包apk安装测试，sample利用gradle的插件，自动打包plugin_impl_apk项目到assets目录下做插件
 
 ## 插件的实现
 
 插件入口类`wow.arthas.plugin.PluginImpl`, 入口方法`void onCreate(Context context);`
-
-
 
 ## 支持功能
 
