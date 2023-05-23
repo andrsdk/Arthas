@@ -23,7 +23,7 @@ static const char JCLASS_LOADER[] = "Ljava/lang/ClassLoader;";
 static const char JCLASS[] = "Ljava/lang/Class;";
 //定义类名
 static const char *className = "wow/arthas/loader/Loader";
-static const char *dexFileName = "plugin.apk";
+static const char *dexFileName = "plugin.dat";
 static const char *pluginClassName = "wow.arthas.plugin.PluginImpl";
 
 
@@ -35,8 +35,9 @@ static bool b(AAssetManager *mgr, const char *dexFileName, char *dstPath);
 
 // 获取DexClassLoader对象
 static void c(JNIEnv *env, jstring dexPath, jstring optimizedDirectory, jobject classLoader);
-// 确定优化dex目录
-static void d();
+
+// 对文件加解密
+static void d(char *path, char *newpath, char *psw);
 
 static jint start(JNIEnv *env, jobject, jobject context);
 
@@ -94,14 +95,26 @@ static bool b(AAssetManager *mgr, const char *dexFileName, char *dstPath) {
         LOGE("[plugin_loader] fopen path failed");
         return false;
     }
-    void *buffer = malloc(4096);
+    const char *psw = "poiuytrewq";
+//    char *buffer = (char *) malloc(1);
+    char buffer;
+    char newCh = 0;
+    int pswLength = strlen(psw);
+    int index = 0;
+
     while (true) {
-        int numBytesRead = AAsset_read(asset, buffer, 4096);
-        if (numBytesRead <= 0)
+        int numBytesRead = AAsset_read(asset, &buffer, 1);
+        if (numBytesRead <= 0) {
             break;
-        fwrite(buffer, numBytesRead, 1, file);      // 写入到 file 内
+        }
+
+        char ch = buffer;
+        LOGE("[plugin_loader] read %c", ch);
+        newCh = ch ^ psw[index % pswLength];
+        LOGE("[plugin_loader] read newCh %c", newCh);
+
+        fwrite(&newCh, numBytesRead, 1, file);      // 写入到 file 内
     }
-    free(buffer);
     fclose(file);
     AAsset_close(asset);
 //    chmod(sig_buffer, 493);
@@ -121,6 +134,31 @@ static void c(JNIEnv *env, jstring dexPath, jstring optimizedDirectory, jobject 
     jobject dex_loader_obj = env->NewObject(cls, jmID, dexPath, optimizedDirectory, NULL, classLoader);
     LOGI("loadDex dex_loader_obj %p", dex_loader_obj);
     dexClassLoader = dex_loader_obj;
+}
+
+static void d(char *path, char *newpath, char *psw) {
+    FILE *pRead = fopen(path, "rb");
+    FILE *pWrite = fopen(newpath, "wb");
+    if (pRead == NULL || pWrite == NULL) {
+        return;
+    } else {
+        int ch = 0;
+        int newCh = 0;//加密或解密后的字符
+        int pswLength = strlen(psw);
+        int index = 0;
+
+        while (!(ch = feof(pRead))) {
+            ch = fgetc(pRead);
+            newCh = ch ^ psw[index % pswLength];
+            fputc(newCh, pWrite);
+            index++;
+        }
+    }
+
+    fclose(pRead);
+    fclose(pWrite);
+    pRead = NULL;
+    pWrite = NULL;
 }
 
 static void loadDex(JNIEnv *env, jobject, jstring dexPath, jstring optimizedDirectory, jobject classload) {
@@ -247,7 +285,7 @@ static jint start(JNIEnv *env, jobject, jobject context) {
  */
 static JNINativeMethod jni_Methods_table[] = {
 //        {"load",  "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V", (void *) loadDex},
-        {"start", "(Landroid/content/Context;)I",                                   (void *) start},
+        {"start", "(Landroid/content/Context;)I", (void *) start},
 };
 
 //根据函数映射表注册函数

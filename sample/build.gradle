@@ -84,10 +84,10 @@ def generateAssets(generateAssetsTask, buildType) {
 }
 
 tasks.whenTaskAdded { task ->
-    if (task.name == "generateDebugAssets") {
-        generateAssets(task, 'debug')
-    }
-    if (task.name == "generateReleaseAssets") {
-        generateAssets(task, 'release')
-    }
+//    if (task.name == "generateDebugAssets") {
+//        generateAssets(task, 'debug')
+//    }
+//    if (task.name == "generateReleaseAssets") {
+//        generateAssets(task, 'release')
+//    }
 }
